@@ -15,7 +15,7 @@
 import Debug from 'debug';
 import {OAuth2Client, Credentials} from 'google-auth-library';
 import path from 'path';
-import mkdirp from 'mkdirp';
+import {mkdirpSync} from 'mkdirp';
 import lowdb from 'lowdb';
 import FileSync from 'lowdb/adapters/FileSync';
 import Memory from 'lowdb/adapters/Memory';
@@ -128,7 +128,7 @@ export default class UserAuthorizer {
     let adapter: lowdb.AdapterSync;
     if (filePath) {
       const parentDir = path.dirname(filePath);
-      mkdirp.sync(parentDir);
+      mkdirpSync(parentDir);
       adapter = new FileSync<T>(filePath);
     } else {
       adapter = new Memory<T>('');
