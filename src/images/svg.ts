@@ -25,7 +25,10 @@ async function renderSVG(image: ImageDefinition): Promise<string> {
   assert(image.source);
   const path = await tmp.tmpName({postfix: '.png'});
   const buffer = Buffer.from(image.source);
-  await sharp(buffer, {density: 2400}).png().toFile(path);
+  // Use 300 DPI (typical print quality) instead of 2400 to avoid exceeding
+  // Google Slides API's 2 million pixel limit for images.
+  // At 300 DPI, an 800x200 SVG becomes ~3333x833 pixels (2.8M pixels).
+  await sharp(buffer, {density: 300}).png().toFile(path);
   return path;
 }
 

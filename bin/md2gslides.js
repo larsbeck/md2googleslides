@@ -20,7 +20,7 @@ const path = require('path');
 const ArgumentParser = require('argparse').ArgumentParser;
 const UserAuthorizer = require('../lib/auth').default;
 const SlideGenerator = require('../lib/slide_generator').default;
-const opener = require('opener');
+// const opener = require('opener'); // Unused - kept for reference
 
 const SCOPES = [
   'https://www.googleapis.com/auth/presentations',
@@ -176,8 +176,8 @@ function generateSlides(slideGenerator) {
 
 function displayResults(id) {
   const url = 'https://docs.google.com/presentation/d/' + id;
-  console.log('Opening your presentation (%s)', url);
-  opener(url);
+  console.log('Your presentation lives here: %s', url);
+  // opener(url);
 }
 authorizeUser()
   .then(buildSlideGenerator)

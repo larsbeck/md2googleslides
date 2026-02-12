@@ -22,7 +22,8 @@ const debug = Debug('md2gslides');
 /**
  * Uploads a local file to temporary storage so it is HTTP/S accessible.
  *
- * Currently uses https://file.io for free emphemeral file hosting.
+ * Currently uses https://tmpfiles.org for free ephemeral file hosting.
+ * Files expire after 1 hour.
  *
  * @param {string} filePath -- Local path to image to upload
  * @returns {Promise<string>} URL to hosted image
@@ -34,16 +35,27 @@ async function uploadLocalImage(filePath: string): Promise<string> {
     const formData = new FormData();
     formData.append('file', stream);
 
-    const res = await axios.post('https://file.io?expires=1h', formData, {
-      headers: formData.getHeaders(),
-    });
+    const res = await axios.post(
+      'https://tmpfiles.org/api/v1/upload',
+      formData,
+      {
+        headers: formData.getHeaders(),
+      },
+    );
     const responseData = res.data;
-    if (!responseData.success) {
+    if (responseData.status !== 'success' || !responseData.data?.url) {
       debug('Unable to upload file: %O', responseData);
       throw new Error(JSON.stringify(responseData));
     }
-    debug('Temporary link: %s', responseData.link);
-    return responseData.link;
+    // tmpfiles.org returns URLs like "http://tmpfiles.org/12345/file.png"
+    // but the actual download URL is "https://tmpfiles.org/dl/12345/file.png"
+    const uploadUrl = responseData.data.url;
+    const downloadUrl = uploadUrl.replace(
+      /^https?:\/\/tmpfiles\.org\//,
+      'https://tmpfiles.org/dl/',
+    );
+    debug('Temporary link: %s', downloadUrl);
+    return downloadUrl;
   } finally {
     stream.destroy();
   }
