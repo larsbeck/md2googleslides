@@ -25,7 +25,7 @@ interface Rules {
 const hastRules: Rules = {};
 
 // Type guard
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 function isTextNode(node: lowlight.HastNode): node is lowlight.AST.Text {
   return node.type === 'text';
 }
@@ -56,7 +56,7 @@ function processHastNode(node: lowlight.HastNode, context: Context): void {
 
 function extractStyle(
   node: lowlight.HastNode,
-  cssRules: {[key: string]: CssRule}
+  cssRules: {[key: string]: CssRule},
 ): StyleDefinition {
   let style = {};
   if (!isElementNode(node)) {
@@ -88,7 +88,7 @@ hastRules['span'] = (node, context) => {
 function highlightSyntax(
   content: string,
   language: string,
-  context: Context
+  context: Context,
 ): void {
   const highlightResult = low.highlight(language, content);
   for (const node of highlightResult.value) {

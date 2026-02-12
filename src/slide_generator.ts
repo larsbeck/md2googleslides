@@ -56,7 +56,7 @@ export default class SlideGenerator {
    */
   public constructor(
     api: SlidesV1.Slides,
-    presentation: SlidesV1.Schema$Presentation
+    presentation: SlidesV1.Schema$Presentation,
   ) {
     this.api = api;
     this.presentation = presentation;
@@ -71,7 +71,7 @@ export default class SlideGenerator {
    */
   public static async newPresentation(
     oauth2Client: OAuth2Client,
-    title: string
+    title: string,
   ): Promise<SlideGenerator> {
     const api = google.slides({version: 'v1', auth: oauth2Client});
     const res = await api.presentations.create({
@@ -94,7 +94,7 @@ export default class SlideGenerator {
   public static async copyPresentation(
     oauth2Client: OAuth2Client,
     title: string,
-    presentationId: string
+    presentationId: string,
   ): Promise<SlideGenerator> {
     const drive = google.drive({version: 'v3', auth: oauth2Client});
     const res = await drive.files.copy({
@@ -116,7 +116,7 @@ export default class SlideGenerator {
    */
   public static async forPresentation(
     oauth2Client: OAuth2Client,
-    presentationId: string
+    presentationId: string,
   ): Promise<SlideGenerator> {
     const api = google.slides({version: 'v1', auth: oauth2Client});
     const res = await api.presentations.get({presentationId: presentationId});
@@ -134,7 +134,7 @@ export default class SlideGenerator {
    */
   public async generateFromMarkdown(
     markdown: string,
-    {css, useFileio}: {css: string; useFileio: boolean}
+    {css, useFileio}: {css: string; useFileio: boolean},
   ): Promise<string> {
     assert(this.presentation?.presentationId);
     this.slides = extractSlides(markdown, css);
@@ -173,7 +173,7 @@ export default class SlideGenerator {
   }
 
   protected async processImages<T>(
-    fn: (img: ImageDefinition) => Promise<T>
+    fn: (img: ImageDefinition) => Promise<T>,
   ): Promise<void> {
     const promises = [];
     for (const slide of this.slides) {
@@ -194,7 +194,7 @@ export default class SlideGenerator {
 
   protected async uploadLocalImages(): Promise<void> {
     const uploadImageifLocal = async (
-      image: ImageDefinition
+      image: ImageDefinition,
     ): Promise<void> => {
       assert(image.url);
       const parsedUrl = new URL(image.url);
@@ -269,7 +269,7 @@ export default class SlideGenerator {
    * @returns {Promise.<*>}
    */
   protected async updatePresentation(
-    batch: SlidesV1.Schema$BatchUpdatePresentationRequest
+    batch: SlidesV1.Schema$BatchUpdatePresentationRequest,
   ): Promise<void> {
     debug('Updating presentation: %O', batch);
     assert(this.presentation?.presentationId);

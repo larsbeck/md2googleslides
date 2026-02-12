@@ -54,7 +54,7 @@ export default class GenericLayout {
   public constructor(
     name: string,
     presentation: SlidesV1.Schema$Presentation,
-    slide: SlideDefinition
+    slide: SlideDefinition,
   ) {
     this.name = name;
     this.presentation = presentation;
@@ -62,7 +62,7 @@ export default class GenericLayout {
   }
 
   public appendCreateSlideRequest(
-    requests: SlidesV1.Schema$Request[]
+    requests: SlidesV1.Schema$Request[],
   ): SlidesV1.Schema$Request[] {
     const layoutId = findLayoutIdByName(this.presentation, this.name);
     if (!layoutId) {
@@ -83,24 +83,24 @@ export default class GenericLayout {
   }
 
   public appendContentRequests(
-    requests: SlidesV1.Schema$Request[]
+    requests: SlidesV1.Schema$Request[],
   ): SlidesV1.Schema$Request[] {
     this.appendFillPlaceholderTextRequest(this.slide.title, 'TITLE', requests);
     this.appendFillPlaceholderTextRequest(
       this.slide.title,
       'CENTERED_TITLE',
-      requests
+      requests,
     );
     this.appendFillPlaceholderTextRequest(
       this.slide.subtitle,
       'SUBTITLE',
-      requests
+      requests,
     );
 
     if (this.slide.backgroundImage) {
       this.appendSetBackgroundImageRequest(
         this.slide.backgroundImage,
-        requests
+        requests,
       );
     }
 
@@ -113,11 +113,11 @@ export default class GenericLayout {
       const bodyElements = findPlaceholder(
         this.presentation,
         this.slide.objectId,
-        'BODY'
+        'BODY',
       );
       const bodyCount = Math.min(
         bodyElements?.length ?? 0,
-        this.slide.bodies.length
+        this.slide.bodies.length,
       );
       for (let i = 0; i < bodyCount; ++i) {
         const placeholder = bodyElements![i];
@@ -136,12 +136,12 @@ export default class GenericLayout {
       assert(this.slide.objectId);
       const objectId = findSpeakerNotesObjectId(
         this.presentation,
-        this.slide.objectId
+        this.slide.objectId,
       );
       this.appendInsertTextRequests(
         this.slide.notes,
         {objectId: objectId},
-        requests
+        requests,
       );
     }
 
@@ -151,7 +151,7 @@ export default class GenericLayout {
   protected appendFillPlaceholderTextRequest(
     value: TextDefinition | undefined,
     placeholder: string | SlidesV1.Schema$PageElement,
-    requests: SlidesV1.Schema$Request[]
+    requests: SlidesV1.Schema$Request[],
   ): void {
     if (!value) {
       debug('No text for placeholder %s');
@@ -163,7 +163,7 @@ export default class GenericLayout {
       const pageElements = findPlaceholder(
         this.presentation,
         this.slide.objectId,
-        placeholder
+        placeholder,
       );
       if (!pageElements) {
         debug('Skipping undefined placeholder %s', placeholder);
@@ -175,7 +175,7 @@ export default class GenericLayout {
     this.appendInsertTextRequests(
       value,
       {objectId: placeholder.objectId},
-      requests
+      requests,
     );
   }
 
@@ -184,7 +184,7 @@ export default class GenericLayout {
     locationProps:
       | Partial<SlidesV1.Schema$UpdateTextStyleRequest>
       | Partial<SlidesV1.Schema$CreateParagraphBulletsRequest>,
-    requests: SlidesV1.Schema$Request[]
+    requests: SlidesV1.Schema$Request[],
   ): void {
     // Insert the raw text first
     const request = {
@@ -192,7 +192,7 @@ export default class GenericLayout {
         {
           text: text.rawText,
         },
-        locationProps
+        locationProps,
       ),
     };
     requests.push(request);
@@ -223,12 +223,12 @@ export default class GenericLayout {
               baselineOffset: textRun.baselineOffset,
             },
           },
-          locationProps
+          locationProps,
         ),
       };
       assert(request.updateTextStyle?.style);
       request.updateTextStyle.fields = this.computeShallowFieldMask(
-        request.updateTextStyle.style
+        request.updateTextStyle.style,
       );
       if (request.updateTextStyle.fields.length) {
         requests.push(request); // Only push if at least one style set
@@ -254,7 +254,7 @@ export default class GenericLayout {
                 ? 'NUMBERED_DIGIT_ALPHA_ROMAN'
                 : 'BULLET_DISC_CIRCLE_SQUARE',
           },
-          locationProps
+          locationProps,
         ),
       };
       requests.push(request);
@@ -263,12 +263,12 @@ export default class GenericLayout {
 
   protected appendSetBackgroundImageRequest(
     image: ImageDefinition,
-    requests: SlidesV1.Schema$Request[]
+    requests: SlidesV1.Schema$Request[],
   ): void {
     debug(
       'Slide #%d: setting background image to %s',
       this.slide.index,
-      image.url
+      image.url,
     );
 
     requests.push({
@@ -289,7 +289,7 @@ export default class GenericLayout {
   protected appendCreateImageRequests(
     images: ImageDefinition[],
     placeholder: SlidesV1.Schema$PageElement | undefined,
-    requests: SlidesV1.Schema$Request[]
+    requests: SlidesV1.Schema$Request[],
   ): void {
     // TODO - Fix weird cast
     const layer = (Layout as (s: string) => Layout.PackingSmith)('left-right'); // TODO - Configurable?
@@ -307,7 +307,7 @@ export default class GenericLayout {
 
     const scaleRatio = Math.min(
       box.width / computedLayout.width,
-      box.height / computedLayout.height
+      box.height / computedLayout.height,
     );
 
     const scaledWidth = computedLayout.width * scaleRatio;
@@ -360,7 +360,7 @@ export default class GenericLayout {
   protected appendCreateVideoRequests(
     videos: VideoDefinition[],
     placeholder: SlidesV1.Schema$PageElement | undefined,
-    requests: SlidesV1.Schema$Request[]
+    requests: SlidesV1.Schema$Request[],
   ): void {
     if (videos.length > 1) {
       throw new Error('Multiple videos per slide are not supported.');
@@ -373,7 +373,7 @@ export default class GenericLayout {
 
     const scaleRatio = Math.min(
       box.width / video.width,
-      box.height / video.height
+      box.height / video.height,
     );
 
     const scaledWidth = video.width * scaleRatio;
@@ -425,7 +425,7 @@ export default class GenericLayout {
 
   protected appendCreateTableRequests(
     tables: TableDefinition[],
-    requests: SlidesV1.Schema$Request[]
+    requests: SlidesV1.Schema$Request[],
   ): void {
     if (tables.length > 1) {
       throw new Error('Multiple tables per slide are not supported.');
@@ -457,14 +457,14 @@ export default class GenericLayout {
               columnIndex: parseInt(c),
             },
           },
-          requests
+          requests,
         );
       }
     }
   }
 
   protected calculateBoundingBox(
-    element: SlidesV1.Schema$PageElement
+    element: SlidesV1.Schema$PageElement,
   ): BoundingBox {
     assert(element);
     assert(element.size?.height?.magnitude);
@@ -485,7 +485,7 @@ export default class GenericLayout {
   }
 
   protected getBodyBoundingBox(
-    placeholder: SlidesV1.Schema$PageElement | undefined
+    placeholder: SlidesV1.Schema$PageElement | undefined,
   ): BoundingBox {
     if (placeholder) {
       return this.calculateBoundingBox(placeholder);
@@ -500,7 +500,7 @@ export default class GenericLayout {
     };
   }
 
-  protected computeShallowFieldMask<T>(object: T): string {
+  protected computeShallowFieldMask<T extends object>(object: T): string {
     const fields = [];
     for (const field of Object.keys(object)) {
       if (object[field as keyof T] !== undefined) {

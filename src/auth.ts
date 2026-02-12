@@ -83,17 +83,17 @@ export default class UserAuthorizer {
    */
   public async getUserCredentials(
     user: string,
-    scopes: string
+    scopes: string,
   ): Promise<OAuth2Client> {
     const oauth2Client = new OAuth2Client(
       this.clientId,
       this.clientSecret,
-      this.redirectUrl
+      this.redirectUrl,
     );
     oauth2Client.on('tokens', (tokens: Credentials) => {
       if (tokens.refresh_token) {
         debug('Saving refresh token');
-        this.db.set(user, tokens).write();
+        void this.db.set(user, tokens).write();
       }
     });
 

@@ -62,7 +62,7 @@ export function parseInlineStyle(inlineStyle: string): CssRule {
 
 export function updateStyleDefinition(
   css: CssRule,
-  style: StyleDefinition
+  style: StyleDefinition,
 ): StyleDefinition {
   const normalizedCss = normalizeKeys(css);
   for (const [key, value] of Object.entries(normalizedCss)) {

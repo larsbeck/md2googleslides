@@ -14,8 +14,8 @@
 
 import Debug from 'debug';
 import extend from 'extend';
-import Token from 'markdown-it/lib/token';
-import parse5, {Element} from 'parse5';
+import MarkdownIt from 'markdown-it';
+import parse5, {DefaultTreeAdapterTypes} from 'parse5';
 import fileUrl from 'file-url';
 import {SlideDefinition, StyleDefinition} from '../slides';
 import parseMarkdown from './parser';
@@ -23,6 +23,9 @@ import {Context} from './env';
 import highlightSyntax from './syntax_highlight';
 import {parseStyleSheet, parseInlineStyle, updateStyleDefinition} from './css';
 import assert from 'assert';
+
+type Token = MarkdownIt.Token;
+type Element = DefaultTreeAdapterTypes.Element;
 
 const debug = Debug('md2gslides');
 
@@ -82,7 +85,7 @@ function processTokens(tokens: Token[], context: Context): void {
 
 function applyTokenStyle(
   token: Token,
-  style: StyleDefinition
+  style: StyleDefinition,
 ): StyleDefinition {
   if (!token.attrs) {
     return style;
@@ -119,7 +122,7 @@ inlineTokenRules['inline'] = (token, context) => {
 
 inlineTokenRules['html_inline'] = (token, context) => {
   const fragment = context.inlineHtmlContext
-    ? parse5.parseFragment(context.inlineHtmlContext, token.content)
+    ? parse5.parseFragment(context.inlineHtmlContext, token.content, {})
     : parse5.parseFragment(token.content);
   if (fragment.childNodes && fragment.childNodes.length) {
     const node = fragment.childNodes[0] as Element;
@@ -155,7 +158,7 @@ inlineTokenRules['html_inline'] = (token, context) => {
     }
 
     const styleAttr = node.attrs.find(
-      (attr: {name: string}) => attr.name === 'style'
+      (attr: {name: string}) => attr.name === 'style',
     );
     if (styleAttr) {
       const css = parseInlineStyle(styleAttr.value);
@@ -282,7 +285,7 @@ inlineTokenRules['emoji'] = (token, context) =>
 
 inlineTokenRules['bullet_list_open'] = inlineTokenRules['ordered_list_open'] = (
   token,
-  context
+  context,
 ) => {
   assert(context.text);
   const style = applyTokenStyle(token, {});
@@ -549,7 +552,7 @@ fullTokenRules['generated_image'] = (token, context) => {
  */
 export default function extractSlides(
   markdown: string,
-  stylesheet?: string
+  stylesheet?: string,
 ): SlideDefinition[] {
   const tokens = parseMarkdown(markdown);
   const css = parseStyleSheet(stylesheet);

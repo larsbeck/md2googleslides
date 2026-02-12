@@ -26,7 +26,9 @@ import extend from 'extend';
 import * as _ from 'lodash';
 import {Stylesheet} from './css';
 import assert from 'assert';
-import {Element} from 'parse5';
+import {DefaultTreeAdapterTypes} from 'parse5';
+
+type ParentNode = DefaultTreeAdapterTypes.ParentNode;
 
 export class Context {
   public slides: SlideDefinition[] = [];
@@ -39,7 +41,7 @@ export class Context {
   public row: TextDefinition[] = [];
   public table?: TableDefinition;
   public list?: ListDefinition;
-  public inlineHtmlContext?: Element;
+  public inlineHtmlContext?: ParentNode;
   public images: ImageDefinition[] = [];
   public videos: VideoDefinition[] = [];
 

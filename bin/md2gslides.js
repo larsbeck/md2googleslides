@@ -14,8 +14,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/* eslint-disable no-console, @typescript-eslint/no-var-requires */
-
 require('babel-polyfill');
 
 const Promise = require('promise');
@@ -37,12 +35,12 @@ const USER_HOME =
 const STORED_CREDENTIALS_PATH = path.join(
   USER_HOME,
   '.md2googleslides',
-  'credentials.json'
+  'credentials.json',
 );
 const STORED_CLIENT_ID_PATH = path.join(
   USER_HOME,
   '.md2googleslides',
-  'client_id.json'
+  'client_id.json',
 );
 
 const parser = new ArgumentParser({
@@ -195,7 +193,7 @@ function loadCss(theme) {
     '..',
     '..',
     'styles',
-    theme + '.css'
+    theme + '.css',
   );
   const css = fs.readFileSync(cssPath, {encoding: 'UTF-8'});
   return css;

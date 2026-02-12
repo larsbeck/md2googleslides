@@ -28,7 +28,7 @@ chai.use(chaiSubset);
 describe('GenericLayout', () => {
   const fixturePath = path.join(path.dirname(__dirname), 'test', 'fixtures');
   const presentation = jsonfile.readFileSync(
-    path.join(fixturePath, 'mock_presentation.json')
+    path.join(fixturePath, 'mock_presentation.json'),
   );
 
   describe('with title slide', () => {

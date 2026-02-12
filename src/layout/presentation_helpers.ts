@@ -29,7 +29,7 @@ export interface Dimensions {
  */
 export function findPage(
   presentation: SlidesV1.Schema$Presentation,
-  pageId: string
+  pageId: string,
 ): SlidesV1.Schema$Page | undefined {
   if (!presentation.slides) {
     return undefined;
@@ -38,7 +38,7 @@ export function findPage(
 }
 
 export function pageSize(
-  presentation: SlidesV1.Schema$Presentation
+  presentation: SlidesV1.Schema$Presentation,
 ): Dimensions {
   assert(presentation.pageSize?.width?.magnitude);
   assert(presentation.pageSize?.height?.magnitude);
@@ -57,13 +57,13 @@ export function pageSize(
  */
 export function findLayoutIdByName(
   presentation: SlidesV1.Schema$Presentation,
-  name: string
+  name: string,
 ): string | undefined {
   if (!presentation.layouts) {
     return undefined;
   }
   const layout = presentation.layouts.find(
-    (l): boolean => l.layoutProperties?.name === name
+    (l): boolean => l.layoutProperties?.name === name,
   );
   if (!layout) {
     return undefined;
@@ -82,7 +82,7 @@ export function findLayoutIdByName(
 export function findPlaceholder(
   presentation: SlidesV1.Schema$Presentation,
   pageId: string,
-  name: string
+  name: string,
 ): SlidesV1.Schema$PageElement[] | undefined {
   const page = findPage(presentation, pageId);
   if (!page) {
@@ -113,7 +113,7 @@ export function findPlaceholder(
 
 export function findSpeakerNotesObjectId(
   presentation: SlidesV1.Schema$Presentation,
-  pageId: string
+  pageId: string,
 ): string | undefined {
   const page = findPage(presentation, pageId);
   if (page) {

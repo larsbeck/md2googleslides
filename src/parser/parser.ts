@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import markdownIt from 'markdown-it';
-import Token from 'markdown-it/lib/token';
+type Token = markdownIt.Token;
 // @ts-ignore
 import attrs from 'markdown-it-attrs';
 // @ts-ignore

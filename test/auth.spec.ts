@@ -15,12 +15,16 @@
 import mockfs from 'mock-fs';
 import nock from 'nock';
 import fs from 'fs';
+import path from 'path';
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import UserAuthorizer from '../src/auth';
 
 const expect = chai.expect;
 chai.use(chaiAsPromised);
+
+// Store reference to node_modules for mock-fs
+const nodeModulesPath = path.resolve(__dirname, '../node_modules');
 
 function stubTokenRequest(): void {
   nock('https://oauth2.googleapis.com').post('/token').reply(200, {
@@ -54,6 +58,8 @@ describe('UserAuthorizer', () => {
           refresh_token: '1/abc',
         },
       }),
+      // Include node_modules to allow dynamic imports
+      [nodeModulesPath]: mockfs.load(nodeModulesPath),
     });
   });
 
@@ -86,7 +92,7 @@ describe('UserAuthorizer', () => {
         });
         const credentials = authorizer.getUserCredentials(
           'user@example.com',
-          'https://www.googleapis.com/auth/slides'
+          'https://www.googleapis.com/auth/slides',
         );
         return expect(credentials).to.eventually.be.rejected;
       });
@@ -99,7 +105,7 @@ describe('UserAuthorizer', () => {
         });
         const credentials = authorizer.getUserCredentials(
           'user@example.com',
-          'https://www.googleapis.com/auth/slides'
+          'https://www.googleapis.com/auth/slides',
         );
         return expect(credentials).to.eventually.be.rejected;
       });
@@ -112,11 +118,11 @@ describe('UserAuthorizer', () => {
         });
         const credentials = authorizer.getUserCredentials(
           'user@example.com',
-          'https://www.googleapis.com/auth/slides'
+          'https://www.googleapis.com/auth/slides',
         );
         return expect(credentials).to.eventually.have.nested.property(
           'credentials.access_token',
-          'new_token'
+          'new_token',
         );
       });
     });
@@ -126,11 +132,11 @@ describe('UserAuthorizer', () => {
         const authorizer = new UserAuthorizer(options);
         const credentials = authorizer.getUserCredentials(
           'current',
-          'https://www.googleapis.com/auth/slides'
+          'https://www.googleapis.com/auth/slides',
         );
         return expect(credentials).to.eventually.have.nested.property(
           'credentials.access_token',
-          'ya29.123'
+          'ya29.123',
         );
       });
 
@@ -139,11 +145,11 @@ describe('UserAuthorizer', () => {
         const authorizer = new UserAuthorizer(options);
         const credentials = authorizer.getUserCredentials(
           'expired',
-          'https://www.googleapis.com/auth/slides'
+          'https://www.googleapis.com/auth/slides',
         );
         return expect(credentials).to.eventually.have.nested.property(
           'credentials.access_token',
-          'new_token'
+          'new_token',
         );
       });
     });
