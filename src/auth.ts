@@ -16,9 +16,9 @@ import Debug from 'debug';
 import {OAuth2Client, Credentials} from 'google-auth-library';
 import path from 'path';
 import {mkdirpSync} from 'mkdirp';
-import lowdb from 'lowdb';
-import FileSync from 'lowdb/adapters/FileSync';
-import Memory from 'lowdb/adapters/Memory';
+import {LowSync} from 'lowdb';
+import {JSONFileSync} from 'lowdb/node';
+import {MemorySync} from 'lowdb';
 
 const debug = Debug('md2gslides');
 
@@ -53,7 +53,7 @@ export interface AuthOptions {
  */
 export default class UserAuthorizer {
   private redirectUrl = 'urn:ietf:wg:oauth:2.0:oob';
-  private db: lowdb.LowdbSync<Credentials>;
+  private db: LowSync<Record<string, Credentials>>;
   private clientId: string;
   private clientSecret: string;
   private prompt: UserPrompt;
@@ -67,6 +67,7 @@ export default class UserAuthorizer {
    */
   public constructor(options: AuthOptions) {
     this.db = UserAuthorizer.initDbSync(options?.filePath);
+    this.db.read();
     this.clientId = options.clientId;
     this.clientSecret = options.clientSecret;
     this.prompt = options.prompt;
@@ -93,11 +94,12 @@ export default class UserAuthorizer {
     oauth2Client.on('tokens', (tokens: Credentials) => {
       if (tokens.refresh_token) {
         debug('Saving refresh token');
-        void this.db.set(user, tokens).write();
+        this.db.data[user] = tokens;
+        this.db.write();
       }
     });
 
-    const tokens = this.db.get(user).value();
+    const tokens = this.db.data[user];
     if (tokens) {
       debug('User previously authorized, refreshing');
       oauth2Client.setCredentials(tokens);
@@ -121,18 +123,19 @@ export default class UserAuthorizer {
    * Initialzes the token database.
    *
    * @param {String} filePath Path to database, null if use in-memory DB only.
-   * @returns {lowdb} database instance
+   * @returns {LowSync} database instance
    * @private
    */
-  private static initDbSync<T>(filePath?: string): lowdb.LowdbSync<T> {
-    let adapter: lowdb.AdapterSync;
+  private static initDbSync<T>(filePath?: string): LowSync<Record<string, T>> {
+    const defaultData: Record<string, T> = {};
     if (filePath) {
       const parentDir = path.dirname(filePath);
       mkdirpSync(parentDir);
-      adapter = new FileSync<T>(filePath);
+      const adapter = new JSONFileSync<Record<string, T>>(filePath);
+      return new LowSync(adapter, defaultData);
     } else {
-      adapter = new Memory<T>('');
+      const adapter = new MemorySync<Record<string, T>>();
+      return new LowSync(adapter, defaultData);
     }
-    return lowdb(adapter);
   }
 }
