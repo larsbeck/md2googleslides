@@ -30,13 +30,6 @@ function stubTokenRequest(): void {
   });
 }
 
-function stubTokenRequestError(): void {
-  nock('https://oauth2.googleapis.com').post('/token').reply(400, {
-    error_description: 'Bad Request',
-    error: 'invalid_grant',
-  });
-}
-
 describe('UserAuthorizer', () => {
   beforeEach(() => {
     mockfs({
@@ -54,6 +47,13 @@ describe('UserAuthorizer', () => {
           refresh_token: '1/abc',
         },
       }),
+      '/tmp/client_id.json': JSON.stringify({
+        installed: {
+          client_id: '123.apps.googleusercontent.com',
+          client_secret: 'abc',
+          redirect_uris: ['http://localhost'],
+        },
+      }),
       // Include node_modules to allow dynamic imports
       [nodeModulesPath]: mockfs.load(nodeModulesPath),
     });
@@ -63,10 +63,8 @@ describe('UserAuthorizer', () => {
 
   it('should ensure DB dir exists', () => {
     const options = {
-      clientId: '123',
-      clientSecret: 'abc',
+      keyfilePath: '/tmp/client_id.json',
       filePath: '/not_a_real_dir/token.json',
-      prompt: () => Promise.resolve('code'),
     };
     new UserAuthorizer(options);
     assert.doesNotThrow(() => fs.accessSync('/not_a_real_dir'));
@@ -74,60 +72,16 @@ describe('UserAuthorizer', () => {
 
   describe('with valid configuration', () => {
     const options = {
-      clientId: '123',
-      clientSecret: 'abc',
+      keyfilePath: '/tmp/client_id.json',
       filePath: '/tmp/tokens.json',
-      prompt: () => Promise.reject(new Error('Prompt not expected')),
     };
-
-    describe('with no saved token', () => {
-      it('should report error if no code provided', async () => {
-        const authorizer = new UserAuthorizer({
-          ...options,
-          prompt: () => Promise.resolve('code'),
-        });
-        const credentials = authorizer.getUserCredentials(
-          'user@example.com',
-          'https://www.googleapis.com/auth/slides',
-        );
-        await assert.rejects(credentials);
-      });
-
-      it('should report error if invalid code provided', async () => {
-        stubTokenRequestError();
-        const authorizer = new UserAuthorizer({
-          ...options,
-          prompt: () => Promise.resolve('not a valid code'),
-        });
-        const credentials = authorizer.getUserCredentials(
-          'user@example.com',
-          'https://www.googleapis.com/auth/slides',
-        );
-        await assert.rejects(credentials);
-      });
-
-      it('should exchange the code if provided', async () => {
-        stubTokenRequest();
-        const authorizer = new UserAuthorizer({
-          ...options,
-          prompt: () => Promise.resolve('code'),
-        });
-        const credentials = authorizer.getUserCredentials(
-          'user@example.com',
-          'https://www.googleapis.com/auth/slides',
-        );
-        const result = await credentials;
-        assert.strictEqual(result.credentials.access_token, 'new_token');
-      });
-    });
 
     describe('with saved token', () => {
       it('should return token if still current', async () => {
         const authorizer = new UserAuthorizer(options);
-        const credentials = authorizer.getUserCredentials(
-          'current',
+        const credentials = authorizer.getUserCredentials('current', [
           'https://www.googleapis.com/auth/slides',
-        );
+        ]);
         const result = await credentials;
         assert.strictEqual(result.credentials.access_token, 'ya29.123');
       });
@@ -135,10 +89,9 @@ describe('UserAuthorizer', () => {
       it('should refresh token if expired', async () => {
         stubTokenRequest();
         const authorizer = new UserAuthorizer(options);
-        const credentials = authorizer.getUserCredentials(
-          'expired',
+        const credentials = authorizer.getUserCredentials('expired', [
           'https://www.googleapis.com/auth/slides',
-        );
+        ]);
         const result = await credentials;
         assert.strictEqual(result.credentials.access_token, 'new_token');
       });

@@ -14,6 +14,7 @@
 
 import Debug from 'debug';
 import {OAuth2Client, Credentials} from 'google-auth-library';
+import {authenticate} from '@google-cloud/local-auth';
 import path from 'path';
 import {mkdirpSync} from 'mkdirp';
 import {LowSync} from 'lowdb';
@@ -22,41 +23,31 @@ import {MemorySync} from 'lowdb';
 
 const debug = Debug('md2gslides');
 
-export type UserPrompt = (message: string) => Promise<string>;
-
 export interface AuthOptions {
-  clientId: string;
-  clientSecret: string;
-  prompt: UserPrompt;
+  keyfilePath: string;
   filePath?: string;
 }
 
 /**
- * Handles the authorization flow, intended for command line usage.
+ * Handles the authorization flow using @google-cloud/local-auth.
+ *
+ * This automatically starts a temporary server, opens the browser,
+ * catches the authorization code, and shuts down.
  *
  * @example
  *   var auth = new UserAuthorizer({
- *     clientId: 'my-client-id',
- *     clientSecret: 'my-client-secret',
+ *     keyfilePath: './client_id.json',
  *     filePath: '/path/to/persistent/token/storage'
- *     prompt: function(url) { ... }
  *   });
  *
- *   var credentials = auth.getUserCredentials('user@example.com', 'https://www.googleapis.com/auth/slides');
+ *   var credentials = auth.getUserCredentials('user@example.com', ['https://www.googleapis.com/auth/slides']);
  *   credentials.then(function(oauth2Client) {
  *     // Valid oauth2Client for use with google APIs.
  *   });
- *
- *   @callback UserAuthorizer-promptCallback
- *   @param {String} url Authorization URL to display to user or open in browser
- *   @returns {Promise.<String>} Promise yielding the authorization code
  */
 export default class UserAuthorizer {
-  private redirectUrl = 'urn:ietf:wg:oauth:2.0:oob';
   private db: LowSync<Record<string, Credentials>>;
-  private clientId: string;
-  private clientSecret: string;
-  private prompt: UserPrompt;
+  private keyfilePath: string;
 
   /**
    * Initialize the authorizer.
@@ -68,9 +59,7 @@ export default class UserAuthorizer {
   public constructor(options: AuthOptions) {
     this.db = UserAuthorizer.initDbSync(options?.filePath);
     this.db.read();
-    this.clientId = options.clientId;
-    this.clientSecret = options.clientSecret;
-    this.prompt = options.prompt;
+    this.keyfilePath = options.keyfilePath;
   }
 
   /**
@@ -79,44 +68,65 @@ export default class UserAuthorizer {
    * If no credentials are available, requests authorization.
    *
    * @param {String} user ID (email address) of user to get credentials for.
-   * @param {String} scopes Authorization scopes to request
+   * @param {String[]} scopes Authorization scopes to request
    * @returns {Promise.<google.auth.OAuth2>}
    */
   public async getUserCredentials(
     user: string,
-    scopes: string,
+    scopes: string[],
   ): Promise<OAuth2Client> {
-    const oauth2Client = new OAuth2Client(
-      this.clientId,
-      this.clientSecret,
-      this.redirectUrl,
-    );
-    oauth2Client.on('tokens', (tokens: Credentials) => {
-      if (tokens.refresh_token) {
+    // Check if we have stored credentials
+    const tokens = this.db.data[user];
+    if (tokens) {
+      debug('User previously authorized, refreshing');
+      const oauth2Client = new OAuth2Client();
+      oauth2Client.setCredentials(tokens);
+
+      // Set up token refresh handler
+      oauth2Client.on('tokens', (newTokens: Credentials) => {
+        if (newTokens.refresh_token) {
+          debug('Saving refresh token');
+          this.db.data[user] = {...tokens, ...newTokens};
+          this.db.write();
+        }
+      });
+
+      try {
+        await oauth2Client.getAccessToken();
+        return oauth2Client;
+      } catch (err) {
+        debug('Failed to refresh token, will re-authenticate: %O', err);
+        // Fall through to re-authenticate
+      }
+    }
+
+    // Authenticate using @google-cloud/local-auth
+    debug('Authenticating with @google-cloud/local-auth');
+    const client = await authenticate({
+      scopes: scopes,
+      keyfilePath: this.keyfilePath,
+    });
+
+    // Store the credentials
+    const credentials = client.credentials;
+    if (credentials.refresh_token) {
+      debug('Saving new credentials');
+      this.db.data[user] = credentials;
+      this.db.write();
+    }
+
+    // Set up token refresh handler for future refreshes
+    client.on('tokens', (newTokens: Credentials) => {
+      if (newTokens.refresh_token) {
         debug('Saving refresh token');
-        this.db.data[user] = tokens;
+        this.db.data[user] = {...credentials, ...newTokens};
         this.db.write();
       }
     });
 
-    const tokens = this.db.data[user];
-    if (tokens) {
-      debug('User previously authorized, refreshing');
-      oauth2Client.setCredentials(tokens);
-      await oauth2Client.getAccessToken();
-      return oauth2Client;
-    }
-
-    debug('Challenging for authorization');
-    const authUrl = oauth2Client.generateAuthUrl({
-      access_type: 'offline',
-      scope: scopes,
-      login_hint: user,
-    });
-    const code = await this.prompt(authUrl);
-    const tokenResponse = await oauth2Client.getToken(code);
-    oauth2Client.setCredentials(tokenResponse.tokens);
-    return oauth2Client;
+    // Convert to the OAuth2Client type used by this project
+    // Both are compatible at runtime, just different imports
+    return client as unknown as OAuth2Client;
   }
 
   /**

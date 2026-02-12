@@ -21,7 +21,6 @@ const ArgumentParser = require('argparse').ArgumentParser;
 const UserAuthorizer = require('../lib/auth').default;
 const SlideGenerator = require('../lib/slide_generator').default;
 const opener = require('opener');
-const readline = require('readline');
 
 const SCOPES = [
   'https://www.googleapis.com/auth/presentations',
@@ -72,12 +71,6 @@ parser.add_argument('-e', '--erase', {
   help: 'Erase existing slides prior to appending.',
   required: false,
 });
-parser.add_argument('-n', '--no-browser', {
-  action: 'store_true',
-  dest: 'headless',
-  help: 'Headless mode - do not launch browsers, just shows URLs',
-  required: false,
-});
 parser.add_argument('-s', '--style', {
   help: 'Name of highlight.js theme for code formatting',
   dest: 'style',
@@ -107,59 +100,21 @@ function handleError(err) {
   console.log('Unable to generate slides:', err);
 }
 
-function prompt(url) {
-  if (args.headless) {
-    console.log('Authorize this app by visiting this url: ');
-    console.log(url);
-  } else {
-    console.log('Authorize this app in your browser.');
-    opener(url);
-  }
-  return new Promise((resolve, reject) => {
-    const rl = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout,
-    });
-    rl.question('Enter the code here: ', code => {
-      rl.close();
-      code = code.trim();
-      if (code.length > 0) {
-        resolve(code);
-      } else {
-        reject(new Error('No code provided'));
-      }
-    });
-  });
-}
-
 function authorizeUser() {
   // Google OAuth2 clients always have a secret, even if the client is an installed
   // application/utility such as this.  Of course, in such cases the "secret" is
   // actually publicly known; security depends entirely on the secrecy of refresh
   // tokens, which effectively become bearer tokens.
 
-  // Load and parse client ID and secret from client_id.json file. (Create
+  // Load and parse client ID from client_id.json file. (Create
   // OAuth client ID from Credentials tab at console.developers.google.com
   // and download the credentials as client_id.json to ~/.md2googleslides
-  let data; // needs to be scoped outside of try-catch
-  try {
-    data = fs.readFileSync(STORED_CLIENT_ID_PATH);
-  } catch (err) {
-    console.log('Error loading client secret file:', err);
-    throw err;
-  }
-  if (data === undefined) {
-    console.log('Error loading client secret data');
-    throw 'No client secret found.';
-  }
-  const creds = JSON.parse(data).installed;
 
-  // Authorize user and get (& store) a valid access token.
+  // The new @google-cloud/local-auth package handles the OAuth flow automatically,
+  // starting a temporary server, opening the browser, and shutting down automatically.
   const options = {
-    clientId: creds.client_id,
-    clientSecret: creds.client_secret,
+    keyfilePath: STORED_CLIENT_ID_PATH,
     filePath: STORED_CREDENTIALS_PATH,
-    prompt: prompt,
   };
   const auth = new UserAuthorizer(options);
   return auth.getUserCredentials(args.user, SCOPES);
@@ -221,12 +176,8 @@ function generateSlides(slideGenerator) {
 
 function displayResults(id) {
   const url = 'https://docs.google.com/presentation/d/' + id;
-  if (args.headless) {
-    console.log('View your presentation at: %s', url);
-  } else {
-    console.log('Opening your presentation (%s)', url);
-    opener(url);
-  }
+  console.log('Opening your presentation (%s)', url);
+  opener(url);
 }
 authorizeUser()
   .then(buildSlideGenerator)
