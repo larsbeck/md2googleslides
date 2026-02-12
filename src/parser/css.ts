@@ -17,7 +17,7 @@ import Debug from 'debug';
 // @ts-ignore
 import inlineStylesParse from 'inline-styles-parse';
 // @ts-ignore
-import nativeCSS from 'native-css';
+import * as css from 'css';
 import {Color, StyleDefinition} from '../slides';
 import * as _ from 'lodash';
 
@@ -50,14 +50,62 @@ function normalizeKeys(css: CssRule): CssRule {
   return _.mapKeys(css, (value, key) => _.camelCase(key));
 }
 
+/**
+ * Convert parsed CSS AST to native JavaScript object format
+ * Replaces the functionality of native-css package
+ */
+function convertCssToObject(cssString: string): Stylesheet {
+  if (!cssString || cssString.trim() === '') {
+    return {};
+  }
+
+  try {
+    const parsed = css.parse(cssString);
+    const result: Stylesheet = {};
+
+    if (!parsed.stylesheet || !parsed.stylesheet.rules) {
+      return result;
+    }
+
+    for (const rule of parsed.stylesheet.rules) {
+      if (rule.type !== 'rule' || !rule.selectors || !rule.declarations) {
+        continue;
+      }
+
+      for (const selector of rule.selectors) {
+        const declarations: CssRule = {};
+        for (const declaration of rule.declarations) {
+          if (
+            declaration.type === 'declaration' &&
+            declaration.property &&
+            declaration.value !== undefined
+          ) {
+            declarations[declaration.property] = declaration.value;
+          }
+        }
+        result[selector] = declarations;
+      }
+    }
+
+    return result;
+  } catch (err) {
+    debug('Failed to parse CSS: %O', err);
+    return {};
+  }
+}
+
 export function parseStyleSheet(stylesheet: string | undefined): Stylesheet {
-  return nativeCSS.convert(stylesheet) as Stylesheet;
+  if (!stylesheet) {
+    return {};
+  }
+  return convertCssToObject(stylesheet);
 }
 
 export function parseInlineStyle(inlineStyle: string): CssRule {
   const dummyRule = inlineStylesParse.declarationsToRule(inlineStyle);
-  const css = nativeCSS.convert(dummyRule);
-  return css['dummy'] as CssRule;
+  const converted = convertCssToObject(dummyRule);
+  // inline-styles-parse uses '.dummy' as selector, check both with and without dot
+  return (converted['.dummy'] || converted['dummy'] || {}) as CssRule;
 }
 
 export function updateStyleDefinition(
