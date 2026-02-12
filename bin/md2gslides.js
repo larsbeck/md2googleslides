@@ -14,8 +14,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-require('babel-polyfill');
-
 const Promise = require('promise');
 const fs = require('fs');
 const path = require('path');

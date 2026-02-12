@@ -16,8 +16,6 @@ import parseColor from 'parse-color';
 import Debug from 'debug';
 // @ts-ignore
 import inlineStylesParse from 'inline-styles-parse';
-// @ts-ignore
-import * as css from 'css';
 import {Color, StyleDefinition} from '../slides';
 import * as _ from 'lodash';
 
@@ -51,8 +49,8 @@ function normalizeKeys(css: CssRule): CssRule {
 }
 
 /**
- * Convert parsed CSS AST to native JavaScript object format
- * Replaces the functionality of native-css package
+ * Simple CSS parser - replaces css package dependency
+ * Parses basic CSS stylesheets into an object format
  */
 function convertCssToObject(cssString: string): Stylesheet {
   if (!cssString || cssString.trim() === '') {
@@ -60,30 +58,37 @@ function convertCssToObject(cssString: string): Stylesheet {
   }
 
   try {
-    const parsed = css.parse(cssString);
     const result: Stylesheet = {};
 
-    if (!parsed.stylesheet || !parsed.stylesheet.rules) {
-      return result;
-    }
+    // Remove comments
+    const cleaned = cssString.replace(/\/\*[\s\S]*?\*\//g, '');
 
-    for (const rule of parsed.stylesheet.rules) {
-      if (rule.type !== 'rule' || !rule.selectors || !rule.declarations) {
-        continue;
+    // Match rules: selector { declarations }
+    const ruleRegex = /([^{]+)\{([^}]+)\}/g;
+    let match;
+
+    while ((match = ruleRegex.exec(cleaned)) !== null) {
+      const selectors = match[1].split(',').map(s => s.trim());
+      const declarationsBlock = match[2];
+
+      // Parse declarations: property: value;
+      const declarations: CssRule = {};
+      const declRegex = /([^:;]+):([^;]+)/g;
+      let declMatch;
+
+      while ((declMatch = declRegex.exec(declarationsBlock)) !== null) {
+        const property = declMatch[1].trim();
+        const value = declMatch[2].trim();
+        if (property && value) {
+          declarations[property] = value;
+        }
       }
 
-      for (const selector of rule.selectors) {
-        const declarations: CssRule = {};
-        for (const declaration of rule.declarations) {
-          if (
-            declaration.type === 'declaration' &&
-            declaration.property &&
-            declaration.value !== undefined
-          ) {
-            declarations[declaration.property] = declaration.value;
-          }
+      // Add declarations for each selector
+      for (const selector of selectors) {
+        if (selector) {
+          result[selector] = declarations;
         }
-        result[selector] = declarations;
       }
     }
 
