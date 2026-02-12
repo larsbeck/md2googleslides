@@ -12,18 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import chai from 'chai';
-import chaiAsPromised from 'chai-as-promised';
-import chaiSubset from 'chai-subset';
+import assert from 'assert';
 import path from 'path';
 import GenericLayout from '../src/layout/generic_layout';
 import jsonfile from 'jsonfile';
 import {slides_v1} from 'googleapis';
 import {SlideDefinition} from '../src/slides';
-
-const expect = chai.expect;
-chai.use(chaiAsPromised);
-chai.use(chaiSubset);
 
 describe('GenericLayout', () => {
   const fixturePath = path.join(path.dirname(__dirname), 'test', 'fixtures');
@@ -63,30 +57,33 @@ describe('GenericLayout', () => {
     });
 
     it('should insert title text', () => {
-      expect(requests).to.deep.include({
-        insertText: {
-          text: 'This is a title slide',
-          objectId: 'centered-title-element',
-        },
-      });
+      assert.ok(
+        requests.some(
+          r =>
+            r.insertText?.text === 'This is a title slide' &&
+            r.insertText?.objectId === 'centered-title-element',
+        ),
+      );
     });
 
     it('should insert subtitle text', () => {
-      expect(requests).to.deep.include({
-        insertText: {
-          text: 'Your name here',
-          objectId: 'subtitle-element',
-        },
-      });
+      assert.ok(
+        requests.some(
+          r =>
+            r.insertText?.text === 'Your name here' &&
+            r.insertText?.objectId === 'subtitle-element',
+        ),
+      );
     });
 
     it('should insert speaker notes', () => {
-      expect(requests).to.deep.include({
-        insertText: {
-          text: 'Speaker notes here.',
-          objectId: 'speaker-notes-element',
-        },
-      });
+      assert.ok(
+        requests.some(
+          r =>
+            r.insertText?.text === 'Speaker notes here.' &&
+            r.insertText?.objectId === 'speaker-notes-element',
+        ),
+      );
     });
   });
 
@@ -121,21 +118,23 @@ describe('GenericLayout', () => {
     });
 
     it('should insert title text', () => {
-      expect(requests).to.deep.include({
-        insertText: {
-          text: 'Title & body slide',
-          objectId: 'title-element',
-        },
-      });
+      assert.ok(
+        requests.some(
+          r =>
+            r.insertText?.text === 'Title & body slide' &&
+            r.insertText?.objectId === 'title-element',
+        ),
+      );
     });
 
     it('should insert body text', () => {
-      expect(requests).to.deep.include({
-        insertText: {
-          text: 'This is the slide body.\n',
-          objectId: 'body-element',
-        },
-      });
+      assert.ok(
+        requests.some(
+          r =>
+            r.insertText?.text === 'This is the slide body.\n' &&
+            r.insertText?.objectId === 'body-element',
+        ),
+      );
     });
   });
 
@@ -174,21 +173,23 @@ describe('GenericLayout', () => {
     });
 
     it('should insert left column text', () => {
-      expect(requests).to.deep.include({
-        insertText: {
-          text: 'This is the left column\n',
-          objectId: 'body-element',
-        },
-      });
+      assert.ok(
+        requests.some(
+          r =>
+            r.insertText?.text === 'This is the left column\n' &&
+            r.insertText?.objectId === 'body-element',
+        ),
+      );
     });
 
     it('should insert right column text', () => {
-      expect(requests).to.deep.include({
-        insertText: {
-          text: 'This is the right column\n',
-          objectId: 'body-element-2',
-        },
-      });
+      assert.ok(
+        requests.some(
+          r =>
+            r.insertText?.text === 'This is the right column\n' &&
+            r.insertText?.objectId === 'body-element-2',
+        ),
+      );
     });
   });
 
@@ -225,19 +226,17 @@ describe('GenericLayout', () => {
     });
 
     it('should set background image', () => {
-      expect(requests).to.deep.include({
-        updatePageProperties: {
-          objectId: 'body-slide',
-          fields: 'pageBackgroundFill.stretchedPictureFill.contentUrl',
-          pageProperties: {
-            pageBackgroundFill: {
-              stretchedPictureFill: {
-                contentUrl: 'https://placekitten.com/1600/900',
-              },
-            },
-          },
-        },
-      });
+      assert.ok(
+        requests.some(
+          r =>
+            r.updatePageProperties?.objectId === 'body-slide' &&
+            r.updatePageProperties?.fields ===
+              'pageBackgroundFill.stretchedPictureFill.contentUrl' &&
+            r.updatePageProperties?.pageProperties?.pageBackgroundFill
+              ?.stretchedPictureFill?.contentUrl ===
+              'https://placekitten.com/1600/900',
+        ),
+      );
     });
   });
 
@@ -275,16 +274,13 @@ describe('GenericLayout', () => {
     });
 
     it('should create image', () => {
-      expect(requests).to.containSubset([
-        {
-          createImage: {
-            elementProperties: {
-              pageObjectId: 'body-slide',
-            },
-            url: 'https://placekitten.com/350/315',
-          },
-        },
-      ]);
+      assert.ok(
+        requests.some(
+          r =>
+            r.createImage?.elementProperties?.pageObjectId === 'body-slide' &&
+            r.createImage?.url === 'https://placekitten.com/350/315',
+        ),
+      );
     });
   });
 
@@ -320,14 +316,13 @@ describe('GenericLayout', () => {
     });
 
     it('should create video', () => {
-      expect(requests).to.containSubset([
-        {
-          createVideo: {
-            source: 'YOUTUBE',
-            id: 'MG8KADiRbOU',
-          },
-        },
-      ]);
+      assert.ok(
+        requests.some(
+          r =>
+            r.createVideo?.source === 'YOUTUBE' &&
+            r.createVideo?.id === 'MG8KADiRbOU',
+        ),
+      );
     });
   });
 
@@ -422,45 +417,36 @@ describe('GenericLayout', () => {
     });
 
     it('should create table', () => {
-      expect(requests).to.containSubset([
-        {
-          createTable: {
-            elementProperties: {
-              pageObjectId: 'body-slide',
-            },
-            rows: 5,
-            columns: 2,
-          },
-        },
-      ]);
+      assert.ok(
+        requests.some(
+          r =>
+            r.createTable?.elementProperties?.pageObjectId === 'body-slide' &&
+            r.createTable?.rows === 5 &&
+            r.createTable?.columns === 2,
+        ),
+      );
     });
 
     it('should create table', () => {
-      expect(requests).to.containSubset([
-        {
-          createTable: {
-            elementProperties: {
-              pageObjectId: 'body-slide',
-            },
-            rows: 5,
-            columns: 2,
-          },
-        },
-      ]);
+      assert.ok(
+        requests.some(
+          r =>
+            r.createTable?.elementProperties?.pageObjectId === 'body-slide' &&
+            r.createTable?.rows === 5 &&
+            r.createTable?.columns === 2,
+        ),
+      );
     });
 
     it('should insert cell text', () => {
-      expect(requests).to.containSubset([
-        {
-          insertText: {
-            text: 'Animal',
-            cellLocation: {
-              rowIndex: 0,
-              columnIndex: 0,
-            },
-          },
-        },
-      ]);
+      assert.ok(
+        requests.some(
+          r =>
+            r.insertText?.text === 'Animal' &&
+            r.insertText?.cellLocation?.rowIndex === 0 &&
+            r.insertText?.cellLocation?.columnIndex === 0,
+        ),
+      );
     });
   });
 
@@ -511,76 +497,59 @@ describe('GenericLayout', () => {
     });
 
     it('should apply bold style', () => {
-      expect(requests).to.containSubset([
-        {
-          updateTextStyle: {
-            textRange: {
-              type: 'FIXED_RANGE',
-              startIndex: 0,
-              endIndex: 4,
-            },
-            style: {
-              bold: true,
-            },
-            objectId: 'body-element',
-            fields: 'bold',
-          },
-        },
-      ]);
+      assert.ok(
+        requests.some(
+          r =>
+            r.updateTextStyle?.objectId === 'body-element' &&
+            r.updateTextStyle?.textRange?.type === 'FIXED_RANGE' &&
+            r.updateTextStyle?.textRange?.startIndex === 0 &&
+            r.updateTextStyle?.textRange?.endIndex === 4 &&
+            r.updateTextStyle?.style?.bold === true &&
+            r.updateTextStyle?.fields === 'bold',
+        ),
+      );
     });
 
     it('should apply italic style', () => {
-      expect(requests).to.containSubset([
-        {
-          updateTextStyle: {
-            textRange: {
-              type: 'FIXED_RANGE',
-              startIndex: 7,
-              endIndex: 11,
-            },
-            style: {
-              italic: true,
-            },
-            objectId: 'body-element',
-            fields: 'italic',
-          },
-        },
-      ]);
+      assert.ok(
+        requests.some(
+          r =>
+            r.updateTextStyle?.objectId === 'body-element' &&
+            r.updateTextStyle?.textRange?.type === 'FIXED_RANGE' &&
+            r.updateTextStyle?.textRange?.startIndex === 7 &&
+            r.updateTextStyle?.textRange?.endIndex === 11 &&
+            r.updateTextStyle?.style?.italic === true &&
+            r.updateTextStyle?.fields === 'italic',
+        ),
+      );
     });
 
     it('should apply font family style', () => {
-      expect(requests).to.containSubset([
-        {
-          updateTextStyle: {
-            textRange: {
-              type: 'FIXED_RANGE',
-              startIndex: 29,
-              endIndex: 33,
-            },
-            style: {
-              fontFamily: 'Courier New',
-            },
-            objectId: 'body-element',
-            fields: 'fontFamily',
-          },
-        },
-      ]);
+      assert.ok(
+        requests.some(
+          r =>
+            r.updateTextStyle?.objectId === 'body-element' &&
+            r.updateTextStyle?.textRange?.type === 'FIXED_RANGE' &&
+            r.updateTextStyle?.textRange?.startIndex === 29 &&
+            r.updateTextStyle?.textRange?.endIndex === 33 &&
+            r.updateTextStyle?.style?.fontFamily === 'Courier New' &&
+            r.updateTextStyle?.fields === 'fontFamily',
+        ),
+      );
     });
 
     it('should create bulleted list', () => {
-      expect(requests).to.containSubset([
-        {
-          createParagraphBullets: {
-            textRange: {
-              type: 'FIXED_RANGE',
-              startIndex: 0,
-              endIndex: 36,
-            },
-            bulletPreset: 'BULLET_DISC_CIRCLE_SQUARE',
-            objectId: 'body-element',
-          },
-        },
-      ]);
+      assert.ok(
+        requests.some(
+          r =>
+            r.createParagraphBullets?.objectId === 'body-element' &&
+            r.createParagraphBullets?.textRange?.type === 'FIXED_RANGE' &&
+            r.createParagraphBullets?.textRange?.startIndex === 0 &&
+            r.createParagraphBullets?.textRange?.endIndex === 36 &&
+            r.createParagraphBullets?.bulletPreset ===
+              'BULLET_DISC_CIRCLE_SQUARE',
+        ),
+      );
     });
   });
 });

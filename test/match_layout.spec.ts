@@ -12,13 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import chai from 'chai';
-import chaiAsPromised from 'chai-as-promised';
+import assert from 'assert';
 import matchLayout from '../src/layout/match_layout';
 import {SlideDefinition} from '../src/slides';
-
-const expect = chai.expect;
-chai.use(chaiAsPromised);
 
 describe('matchLayout', () => {
   const tests: [string, SlideDefinition][] = [
@@ -196,7 +192,7 @@ describe('matchLayout', () => {
   for (const test of tests) {
     it(`should match ${test[0]}`, () => {
       const layout = matchLayout({}, test[1]);
-      expect(layout.name).to.eql(test[0]);
+      assert.strictEqual(layout.name, test[0]);
     });
   }
 });
@@ -220,6 +216,6 @@ describe('matchCustomLayout', () => {
       ],
     };
     const layout = matchLayout(presentation, slide);
-    expect(layout.name).to.eql('MYLAYOUT');
+    assert.strictEqual(layout.name, 'MYLAYOUT');
   });
 });

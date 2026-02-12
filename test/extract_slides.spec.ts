@@ -12,12 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import chai from 'chai';
-import chaiAsPromised from 'chai-as-promised';
+import assert from 'assert';
 import extractSlides from '../src/parser/extract_slides';
-
-const expect = chai.expect;
-chai.use(chaiAsPromised);
 
 describe('extractSlides', () => {
   describe('with a title slide', () => {
@@ -25,26 +21,22 @@ describe('extractSlides', () => {
     const slides = extractSlides(markdown);
 
     it('should return a slide', () => {
-      return expect(slides).to.have.length(1);
+      assert.strictEqual(slides.length, 1);
     });
 
     it('should have a title', () => {
       console.log(slides);
-      return expect(slides).to.have.nested.property(
-        '[0].title.rawText',
-        'Title',
-      );
+      assert.ok(slides[0].title);
+      assert.strictEqual(slides[0].title.rawText, 'Title');
     });
 
     it('should have a subtitle', () => {
-      return expect(slides).to.have.nested.property(
-        '[0].subtitle.rawText',
-        'Subtitle',
-      );
+      assert.ok(slides[0].subtitle);
+      assert.strictEqual(slides[0].subtitle.rawText, 'Subtitle');
     });
 
     it('should have empty bodies', () => {
-      return expect(slides).to.have.nested.property('[0].bodies').empty;
+      assert.strictEqual(slides[0].bodies.length, 0);
     });
   });
 
@@ -54,36 +46,31 @@ describe('extractSlides', () => {
     const slides = extractSlides(markdown);
 
     it('should return a slide', () => {
-      return expect(slides).to.have.length(1);
+      assert.strictEqual(slides.length, 1);
     });
 
     it('should have no title', () => {
-      return expect(slides).to.not.have.nested.property('[0].title');
+      assert.strictEqual(slides[0].title, undefined);
     });
 
     it('should have empty bodies', () => {
-      return expect(slides).to.have.nested.property('[0].bodies').empty;
+      assert.strictEqual(slides[0].bodies.length, 0);
     });
   });
   describe('with a title & body slide', () => {
     const markdown = '# Title\n' + 'hello world\n';
     const slides = extractSlides(markdown);
     it('should have a title', () => {
-      return expect(slides).to.have.nested.property(
-        '[0].title.rawText',
-        'Title',
-      );
+      assert.ok(slides[0].title);
+      assert.strictEqual(slides[0].title.rawText, 'Title');
     });
 
     it('should have 1 body', () => {
-      return expect(slides).to.have.nested.property('[0].bodies').length(1);
+      assert.strictEqual(slides[0].bodies.length, 1);
     });
 
     it('should have body text', () => {
-      return expect(slides).to.have.nested.property(
-        '[0].bodies[0].text.rawText',
-        'hello world\n',
-      );
+      assert.strictEqual(slides[0].bodies[0]!.text!.rawText, 'hello world\n');
     });
   });
 
@@ -93,28 +80,20 @@ describe('extractSlides', () => {
     const slides = extractSlides(markdown);
 
     it('should have a title', () => {
-      return expect(slides).to.have.nested.property(
-        '[0].title.rawText',
-        'Title',
-      );
+      assert.ok(slides[0].title);
+      assert.strictEqual(slides[0].title.rawText, 'Title');
     });
 
     it('should have 2 bodies', () => {
-      return expect(slides).to.have.nested.property('[0].bodies').length(2);
+      assert.strictEqual(slides[0].bodies.length, 2);
     });
 
     it('should have 1st column text', () => {
-      return expect(slides).to.have.nested.property(
-        '[0].bodies[0].text.rawText',
-        'hello\n',
-      );
+      assert.strictEqual(slides[0].bodies[0]!.text!.rawText, 'hello\n');
     });
 
     it('should have 2nd column text', () => {
-      return expect(slides).to.have.nested.property(
-        '[0].bodies[1].text.rawText',
-        'world\n',
-      );
+      assert.strictEqual(slides[0].bodies[1]!.text!.rawText, 'world\n');
     });
   });
 
@@ -126,8 +105,9 @@ describe('extractSlides', () => {
     const slides = extractSlides(markdown);
 
     it('should have a background image', () => {
-      return expect(slides).to.have.nested.property(
-        '[0].backgroundImage.url',
+      assert.ok(slides[0].backgroundImage);
+      assert.strictEqual(
+        slides[0].backgroundImage.url,
         'https://example.com/image.jpg',
       );
     });
@@ -142,24 +122,18 @@ describe('extractSlides', () => {
     const slides = extractSlides(markdown);
 
     it('should have a background image', () => {
-      return expect(slides).to.have.nested.property(
-        '[0].bodies[0].images[0].url',
+      assert.strictEqual(
+        slides[0].bodies[0].images[0].url,
         'https://example.com/image.jpg',
       );
     });
 
     it('should have an image x offset', () => {
-      return expect(slides).to.have.nested.property(
-        '[0].bodies[0].images[0].offsetX',
-        100,
-      );
+      assert.strictEqual(slides[0].bodies[0].images[0].offsetX, 100);
     });
 
     it('should have an image y offset', () => {
-      return expect(slides).to.have.nested.property(
-        '[0].bodies[0].images[0].offsetY',
-        200,
-      );
+      assert.strictEqual(slides[0].bodies[0].images[0].offsetY, 200);
     });
   });
 
@@ -169,10 +143,7 @@ describe('extractSlides', () => {
     const slides = extractSlides(markdown);
 
     it('should have a video', () => {
-      return expect(slides).to.have.nested.property(
-        '[0].bodies[0].videos[0].id',
-        '12345',
-      );
+      assert.strictEqual(slides[0].bodies[0].videos[0].id, '12345');
     });
   });
 
@@ -190,19 +161,15 @@ describe('extractSlides', () => {
     const slides = extractSlides(markdown);
 
     it('should have a table', () => {
-      return expect(slides).to.have.nested.property('[0].tables').length(1);
+      assert.strictEqual(slides[0].tables.length, 1);
     });
 
     it('should have four rows', () => {
-      return expect(slides)
-        .to.have.nested.property('[0].tables[0].rows')
-        .eql(4);
+      assert.strictEqual(slides[0].tables[0].rows, 4);
     });
 
     it('should have two columns', () => {
-      return expect(slides)
-        .to.have.nested.property('[0].tables[0].columns')
-        .eql(2);
+      assert.strictEqual(slides[0].tables[0].columns, 2);
     });
   });
 
@@ -212,28 +179,20 @@ describe('extractSlides', () => {
     const slides = extractSlides(markdown);
 
     it('should have list markers', () => {
-      return expect(slides)
-        .to.have.nested.property('[0].bodies[0].text.listMarkers')
-        .length(1);
+      assert.strictEqual(slides[0].bodies[0]!.text!.listMarkers.length, 1);
     });
 
     it('should have the correct start', () => {
-      return expect(slides).to.have.nested.property(
-        '[0].bodies[0].text.listMarkers[0].start',
-        0,
-      );
+      assert.strictEqual(slides[0].bodies[0]!.text!.listMarkers[0].start, 0);
     });
 
     it('should have the correct end', () => {
-      return expect(slides).to.have.nested.property(
-        '[0].bodies[0].text.listMarkers[0].end',
-        14,
-      );
+      assert.strictEqual(slides[0].bodies[0]!.text!.listMarkers[0].end, 14);
     });
 
     it('should have the correct tyoe', () => {
-      return expect(slides).to.have.nested.property(
-        '[0].bodies[0].text.listMarkers[0].type',
+      assert.strictEqual(
+        slides[0].bodies[0]!.text!.listMarkers[0].type,
         'unordered',
       );
     });
@@ -245,28 +204,20 @@ describe('extractSlides', () => {
     const slides = extractSlides(markdown);
 
     it('should have list markers', () => {
-      return expect(slides)
-        .to.have.nested.property('[0].bodies[0].text.listMarkers')
-        .length(1);
+      assert.strictEqual(slides[0].bodies[0]!.text!.listMarkers.length, 1);
     });
 
     it('should have the correct start', () => {
-      return expect(slides).to.have.nested.property(
-        '[0].bodies[0].text.listMarkers[0].start',
-        0,
-      );
+      assert.strictEqual(slides[0].bodies[0]!.text!.listMarkers[0].start, 0);
     });
 
     it('should have the correct end', () => {
-      return expect(slides).to.have.nested.property(
-        '[0].bodies[0].text.listMarkers[0].end',
-        14,
-      );
+      assert.strictEqual(slides[0].bodies[0]!.text!.listMarkers[0].end, 14);
     });
 
     it('should have the correct type', () => {
-      return expect(slides).to.have.nested.property(
-        '[0].bodies[0].text.listMarkers[0].type',
+      assert.strictEqual(
+        slides[0].bodies[0]!.text!.listMarkers[0].type,
         'ordered',
       );
     });
@@ -278,70 +229,44 @@ describe('extractSlides', () => {
     const slides = extractSlides(markdown);
 
     it('should have text runs', () => {
-      return expect(slides)
-        .to.have.nested.property('[0].bodies[0].text.textRuns')
-        .length(3);
+      assert.strictEqual(slides[0].bodies[0]!.text!.textRuns.length, 3);
     });
 
     it('should have the correct italic start', () => {
-      return expect(slides).to.have.nested.property(
-        '[0].bodies[0].text.textRuns[0].start',
-        0,
-      );
+      assert.strictEqual(slides[0].bodies[0]!.text!.textRuns[0].start, 0);
     });
 
     it('should have the correct italic end', () => {
-      return expect(slides).to.have.nested.property(
-        '[0].bodies[0].text.textRuns[0].end',
-        6,
-      );
+      assert.strictEqual(slides[0].bodies[0]!.text!.textRuns[0].end, 6);
     });
 
     it('should have the correct italic style', () => {
-      return expect(slides).to.have.nested.property(
-        '[0].bodies[0].text.textRuns[0].italic',
-        true,
-      );
+      assert.strictEqual(slides[0].bodies[0]!.text!.textRuns[0].italic, true);
     });
 
     it('should have the correct bold start', () => {
-      return expect(slides).to.have.nested.property(
-        '[0].bodies[0].text.textRuns[1].start',
-        8,
-      );
+      assert.strictEqual(slides[0].bodies[0]!.text!.textRuns[1].start, 8);
     });
 
     it('should have the correct bold end', () => {
-      return expect(slides).to.have.nested.property(
-        '[0].bodies[0].text.textRuns[1].end',
-        12,
-      );
+      assert.strictEqual(slides[0].bodies[0]!.text!.textRuns[1].end, 12);
     });
 
     it('should have the correct bold style', () => {
-      return expect(slides).to.have.nested.property(
-        '[0].bodies[0].text.textRuns[1].bold',
-        true,
-      );
+      assert.strictEqual(slides[0].bodies[0]!.text!.textRuns[1].bold, true);
     });
 
     it('should have the correct strikethrough start', () => {
-      return expect(slides).to.have.nested.property(
-        '[0].bodies[0].text.textRuns[2].start',
-        14,
-      );
+      assert.strictEqual(slides[0].bodies[0]!.text!.textRuns[2].start, 14);
     });
 
     it('should have the correct strikethrough end', () => {
-      return expect(slides).to.have.nested.property(
-        '[0].bodies[0].text.textRuns[2].end',
-        27,
-      );
+      assert.strictEqual(slides[0].bodies[0]!.text!.textRuns[2].end, 27);
     });
 
     it('should have the correct strikethrough style', () => {
-      return expect(slides).to.have.nested.property(
-        '[0].bodies[0].text.textRuns[2].strikethrough',
+      assert.strictEqual(
+        slides[0].bodies[0]!.text!.textRuns[2].strikethrough,
         true,
       );
     });
@@ -353,10 +278,7 @@ describe('extractSlides', () => {
     const slides = extractSlides(markdown);
 
     it('should have emoji', () => {
-      return expect(slides).to.have.nested.property(
-        '[0].bodies[0].text.rawText',
-        '❤️\n',
-      );
+      assert.strictEqual(slides[0].bodies[0]!.text!.rawText, '❤️\n');
     });
   });
 
@@ -366,35 +288,23 @@ describe('extractSlides', () => {
     const slides = extractSlides(markdown);
 
     it('should have text runs', () => {
-      return expect(slides)
-        .to.have.nested.property('[0].bodies[0].text.textRuns')
-        .length(1);
+      assert.strictEqual(slides[0].bodies[0]!.text!.textRuns.length, 1);
     });
 
     it('should have the correct start', () => {
-      return expect(slides).to.have.nested.property(
-        '[0].bodies[0].text.textRuns[0].start',
-        0,
-      );
+      assert.strictEqual(slides[0].bodies[0]!.text!.textRuns[0].start, 0);
     });
 
     it('should have the correct end', () => {
-      return expect(slides).to.have.nested.property(
-        '[0].bodies[0].text.textRuns[0].end',
-        5,
-      );
+      assert.strictEqual(slides[0].bodies[0]!.text!.textRuns[0].end, 5);
     });
 
     it('should have the color style', () => {
-      return expect(slides).to.have.nested.property(
-        '[0].bodies[0].text.textRuns[0].foregroundColor',
-      );
+      assert.ok(slides[0].bodies[0]!.text!.textRuns[0].foregroundColor);
     });
 
     it('should have the font size style', () => {
-      return expect(slides).to.have.nested.property(
-        '[0].bodies[0].text.textRuns[0].fontSize',
-      );
+      assert.ok(slides[0].bodies[0]!.text!.textRuns[0].fontSize);
     });
   });
 
@@ -405,35 +315,23 @@ describe('extractSlides', () => {
     const slides = extractSlides(markdown);
 
     it('should have text runs', () => {
-      return expect(slides)
-        .to.have.nested.property('[0].bodies[0].text.textRuns')
-        .length(1);
+      assert.strictEqual(slides[0].bodies[0]!.text!.textRuns.length, 1);
     });
 
     it('should have the correct start', () => {
-      return expect(slides).to.have.nested.property(
-        '[0].bodies[0].text.textRuns[0].start',
-        0,
-      );
+      assert.strictEqual(slides[0].bodies[0]!.text!.textRuns[0].start, 0);
     });
 
     it('should have the correct end', () => {
-      return expect(slides).to.have.nested.property(
-        '[0].bodies[0].text.textRuns[0].end',
-        5,
-      );
+      assert.strictEqual(slides[0].bodies[0]!.text!.textRuns[0].end, 5);
     });
 
     it('should have the color style', () => {
-      return expect(slides).to.have.nested.property(
-        '[0].bodies[0].text.textRuns[0].foregroundColor',
-      );
+      assert.ok(slides[0].bodies[0]!.text!.textRuns[0].foregroundColor);
     });
 
     it('should have the font size style', () => {
-      return expect(slides).to.have.nested.property(
-        '[0].bodies[0].text.textRuns[0].fontSize',
-      );
+      assert.ok(slides[0].bodies[0]!.text!.textRuns[0].fontSize);
     });
   });
 
@@ -443,28 +341,20 @@ describe('extractSlides', () => {
     const slides = extractSlides(markdown);
 
     it('should have text runs', () => {
-      return expect(slides)
-        .to.have.nested.property('[0].bodies[0].text.textRuns')
-        .length(1);
+      assert.strictEqual(slides[0].bodies[0]!.text!.textRuns.length, 1);
     });
 
     it('should have the correct start', () => {
-      return expect(slides).to.have.nested.property(
-        '[0].bodies[0].text.textRuns[0].start',
-        1,
-      );
+      assert.strictEqual(slides[0].bodies[0]!.text!.textRuns[0].start, 1);
     });
 
     it('should have the correct end', () => {
-      return expect(slides).to.have.nested.property(
-        '[0].bodies[0].text.textRuns[0].end',
-        2,
-      );
+      assert.strictEqual(slides[0].bodies[0]!.text!.textRuns[0].end, 2);
     });
 
     it('should have the correct style', () => {
-      return expect(slides).to.have.nested.property(
-        '[0].bodies[0].text.textRuns[0].baselineOffset',
+      assert.strictEqual(
+        slides[0].bodies[0]!.text!.textRuns[0].baselineOffset,
         'SUBSCRIPT',
       );
     });
@@ -476,28 +366,20 @@ describe('extractSlides', () => {
     const slides = extractSlides(markdown);
 
     it('should have text runs', () => {
-      return expect(slides)
-        .to.have.nested.property('[0].bodies[0].text.textRuns')
-        .length(1);
+      assert.strictEqual(slides[0].bodies[0]!.text!.textRuns.length, 1);
     });
 
     it('should have the correct start', () => {
-      return expect(slides).to.have.nested.property(
-        '[0].bodies[0].text.textRuns[0].start',
-        5,
-      );
+      assert.strictEqual(slides[0].bodies[0]!.text!.textRuns[0].start, 5);
     });
 
     it('should have the correct end', () => {
-      return expect(slides).to.have.nested.property(
-        '[0].bodies[0].text.textRuns[0].end',
-        6,
-      );
+      assert.strictEqual(slides[0].bodies[0]!.text!.textRuns[0].end, 6);
     });
 
     it('should have the correct style', () => {
-      return expect(slides).to.have.nested.property(
-        '[0].bodies[0].text.textRuns[0].baselineOffset',
+      assert.strictEqual(
+        slides[0].bodies[0]!.text!.textRuns[0].baselineOffset,
         'SUPERSCRIPT',
       );
     });
@@ -515,22 +397,16 @@ describe('extractSlides', () => {
     const slides = extractSlides(markdown);
 
     it('should have speaker notes', () => {
-      return expect(slides).to.have.nested.property(
-        '[0].notes.rawText',
-        'Hello world\none\ntwo\n',
-      );
+      assert.ok(slides[0].notes);
+      assert.strictEqual(slides[0].notes!.rawText, 'Hello world\none\ntwo\n');
     });
 
     it('should have text runs', () => {
-      return expect(slides)
-        .to.have.nested.property('[0].notes.textRuns')
-        .length(1);
+      assert.strictEqual(slides[0].notes!.textRuns.length, 1);
     });
 
     it('should have list markers', () => {
-      return expect(slides)
-        .to.have.nested.property('[0].notes.listMarkers')
-        .length(1);
+      assert.strictEqual(slides[0].notes!.listMarkers.length, 1);
     });
   });
 
@@ -539,10 +415,7 @@ describe('extractSlides', () => {
     const slides = extractSlides(markdown);
 
     it('should have a customLayout', () => {
-      return expect(slides).to.have.nested.property(
-        '[0].customLayout',
-        'my custom layout',
-      );
+      assert.strictEqual(slides[0].customLayout, 'my custom layout');
     });
   });
 });

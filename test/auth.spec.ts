@@ -16,12 +16,8 @@ import mockfs from 'mock-fs';
 import nock from 'nock';
 import fs from 'fs';
 import path from 'path';
-import chai from 'chai';
-import chaiAsPromised from 'chai-as-promised';
+import assert from 'assert';
 import UserAuthorizer from '../src/auth';
-
-const expect = chai.expect;
-chai.use(chaiAsPromised);
 
 // Store reference to node_modules for mock-fs
 const nodeModulesPath = path.resolve(__dirname, '../node_modules');
@@ -73,7 +69,7 @@ describe('UserAuthorizer', () => {
       prompt: () => Promise.resolve('code'),
     };
     new UserAuthorizer(options);
-    expect(() => fs.accessSync('/not_a_real_dir')).to.not.throw(Error);
+    assert.doesNotThrow(() => fs.accessSync('/not_a_real_dir'));
   });
 
   describe('with valid configuration', () => {
@@ -85,7 +81,7 @@ describe('UserAuthorizer', () => {
     };
 
     describe('with no saved token', () => {
-      it('should report error if no code provided', () => {
+      it('should report error if no code provided', async () => {
         const authorizer = new UserAuthorizer({
           ...options,
           prompt: () => Promise.resolve('code'),
@@ -94,10 +90,10 @@ describe('UserAuthorizer', () => {
           'user@example.com',
           'https://www.googleapis.com/auth/slides',
         );
-        return expect(credentials).to.eventually.be.rejected;
+        await assert.rejects(credentials);
       });
 
-      it('should report error if invalid code provided', () => {
+      it('should report error if invalid code provided', async () => {
         stubTokenRequestError();
         const authorizer = new UserAuthorizer({
           ...options,
@@ -107,10 +103,10 @@ describe('UserAuthorizer', () => {
           'user@example.com',
           'https://www.googleapis.com/auth/slides',
         );
-        return expect(credentials).to.eventually.be.rejected;
+        await assert.rejects(credentials);
       });
 
-      it('should exchange the code if provided', () => {
+      it('should exchange the code if provided', async () => {
         stubTokenRequest();
         const authorizer = new UserAuthorizer({
           ...options,
@@ -120,37 +116,31 @@ describe('UserAuthorizer', () => {
           'user@example.com',
           'https://www.googleapis.com/auth/slides',
         );
-        return expect(credentials).to.eventually.have.nested.property(
-          'credentials.access_token',
-          'new_token',
-        );
+        const result = await credentials;
+        assert.strictEqual(result.credentials.access_token, 'new_token');
       });
     });
 
     describe('with saved token', () => {
-      it('should return token if still current', () => {
+      it('should return token if still current', async () => {
         const authorizer = new UserAuthorizer(options);
         const credentials = authorizer.getUserCredentials(
           'current',
           'https://www.googleapis.com/auth/slides',
         );
-        return expect(credentials).to.eventually.have.nested.property(
-          'credentials.access_token',
-          'ya29.123',
-        );
+        const result = await credentials;
+        assert.strictEqual(result.credentials.access_token, 'ya29.123');
       });
 
-      it('should refresh token if expired', () => {
+      it('should refresh token if expired', async () => {
         stubTokenRequest();
         const authorizer = new UserAuthorizer(options);
         const credentials = authorizer.getUserCredentials(
           'expired',
           'https://www.googleapis.com/auth/slides',
         );
-        return expect(credentials).to.eventually.have.nested.property(
-          'credentials.access_token',
-          'new_token',
-        );
+        const result = await credentials;
+        assert.strictEqual(result.credentials.access_token, 'new_token');
       });
     });
   });

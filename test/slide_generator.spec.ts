@@ -15,13 +15,9 @@
 import path from 'path';
 import jsonfile from 'jsonfile';
 import nock from 'nock';
-import chai from 'chai';
-import chaiAsPromised from 'chai-as-promised';
+import assert from 'assert';
 import {OAuth2Client} from 'google-auth-library';
 import SlideGenerator from '../src/slide_generator';
-
-const expect = chai.expect;
-chai.use(chaiAsPromised);
 
 function buildCredentials(): OAuth2Client {
   const oauth2Client = new OAuth2Client('test', 'test');
@@ -45,12 +41,13 @@ describe('SlideGenerator', () => {
         .reply(200, presentation);
     });
 
-    it('should create a presentation', () => {
+    it('should create a presentation', async () => {
       const generator = SlideGenerator.newPresentation(
         buildCredentials(),
         'title',
       );
-      return expect(generator).to.eventually.be.instanceof(SlideGenerator);
+      const result = await generator;
+      assert.ok(result instanceof SlideGenerator);
     });
   });
 
@@ -61,12 +58,13 @@ describe('SlideGenerator', () => {
         .reply(200, {presentationId: '12345'});
     });
 
-    it('should load presentation', () => {
+    it('should load presentation', async () => {
       const generator = SlideGenerator.forPresentation(
         buildCredentials(),
         '12345',
       );
-      return expect(generator).to.eventually.be.instanceof(SlideGenerator);
+      const result = await generator;
+      assert.ok(result instanceof SlideGenerator);
     });
   });
 });
