@@ -19,7 +19,7 @@ import attrs from 'markdown-it-attrs';
 // @ts-ignore
 import lazyHeaders from 'markdown-it-lazy-headers';
 // @ts-ignore
-import emoji from 'markdown-it-emoji';
+import * as emoji from 'markdown-it-emoji';
 // @ts-ignore
 import expandTabs from 'markdown-it-expand-tabs';
 // @ts-ignore
@@ -44,7 +44,7 @@ const mdOptions = {
 const parser = markdownIt(mdOptions)
   .use(attrs)
   .use(lazyHeaders)
-  .use(emoji, {shortcuts: {}})
+  .use(emoji.full, {shortcuts: {}})
   .use(expandTabs, {tabWidth: 4})
   .use(generatedImage)
   .use(video, {youtube: {width: 640, height: 390}});
