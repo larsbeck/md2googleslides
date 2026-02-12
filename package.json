@@ -55,7 +55,7 @@
     "layout": "^2.2.0",
     "lodash": "^4.17.23",
     "lowdb": "^7.0.1",
-    "lowlight": "^1.20.0",
+    "lowlight": "^3.3.0",
     "markdown-it": "^14.1.1",
     "markdown-it-attrs": "^4.3.1",
     "markdown-it-container": "^4.0.0",
