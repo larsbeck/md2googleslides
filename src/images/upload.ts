@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import axios from 'axios';
 import Debug from 'debug';
 import fs from 'fs';
-import request from 'request-promise-native';
+import FormData from 'form-data';
 
 const debug = Debug('md2gslides');
 
@@ -30,17 +31,16 @@ async function uploadLocalImage(filePath: string): Promise<string> {
   debug('Registering file %s', filePath);
   const stream = fs.createReadStream(filePath);
   try {
-    const params = {
-      file: stream,
-    };
-    const res = await request.post({
-      url: 'https://file.io?expires=1h',
-      formData: params,
+    const formData = new FormData();
+    formData.append('file', stream);
+
+    const res = await axios.post('https://file.io?expires=1h', formData, {
+      headers: formData.getHeaders(),
     });
-    const responseData = JSON.parse(res);
+    const responseData = res.data;
     if (!responseData.success) {
       debug('Unable to upload file: %O', responseData);
-      throw res;
+      throw new Error(JSON.stringify(responseData));
     }
     debug('Temporary link: %s', responseData.link);
     return responseData.link;
