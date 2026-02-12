@@ -23,9 +23,11 @@ Then get your OAuth client ID credentials:
 * Enable Google Slides API at [API library page](https://console.developers.google.com/apis/library)
 * Go to [Credentials page](https://console.developers.google.com/apis/credentials) and click "+ Create credentials" at the top
 * Select "OAuth client ID" authorization credentials
-* Choose type "Computer Application" and give it some name.
-* Download client credentials file.
-* Copy it to `client_id.json` (name has to match) and save to `~/.md2googleslides`.
+* Choose application type **"Desktop app"** and give it a name (e.g., "md2gslides Desktop")
+* Click "Create" and download the client credentials file
+* Copy it to `client_id.json` (name has to match) and save to `~/.md2googleslides`
+
+**Note:** If you previously used "Computer Application" credentials, you must create new "Desktop app" credentials. The older OAuth flow is no longer supported by Google.
 
 After installing, import your slides by running:
 
