@@ -22,6 +22,7 @@ import uploadLocalImage from './images/upload';
 import {OAuth2Client} from 'google-auth-library';
 import probeImage from './images/probe';
 import maybeGenerateImage from './images/generate';
+import convertRemoteSVG from './images/remote_svg';
 import assert from 'assert';
 
 const debug = Debug('md2gslides');
@@ -140,6 +141,7 @@ export default class SlideGenerator {
     this.slides = extractSlides(markdown, css);
     this.allowUpload = useFileio;
     await this.generateImages();
+    await this.convertRemoteSVGs();
     await this.probeImageSizes();
     await this.uploadLocalImages();
     await this.updatePresentation(this.createSlides());
@@ -190,6 +192,10 @@ export default class SlideGenerator {
   }
   protected async generateImages(): Promise<void> {
     return this.processImages(maybeGenerateImage);
+  }
+
+  protected async convertRemoteSVGs(): Promise<void> {
+    return this.processImages(convertRemoteSVG);
   }
 
   protected async uploadLocalImages(): Promise<void> {

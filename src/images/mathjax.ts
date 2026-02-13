@@ -213,10 +213,10 @@ async function renderMath(image: ImageDefinition): Promise<string> {
   // Create an SVG with embedded HTML using foreignObject
   // We use a large viewport and let the content determine size
   const width = 800;
-  const height = 200;
-  const scale = 5; // Scale factor similar to MathJax's scale: 500
-
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+  const height = 250;
+  const scale = 1; // Scale factor similar to MathJax's scale: 500
+  const margin = 20;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="-${margin} -${margin} ${width + margin * 2} ${height + margin * 2}" preserveAspectRatio="xMidYMid meet">
   <defs>
     <style type="text/css">
       ${KATEX_CSS}
